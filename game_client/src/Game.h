@@ -25,4 +25,5 @@ private:
     void update();
     void render();
     void spawnEnemies();
+    void reset();
 };
