@@ -1,5 +1,5 @@
-#include "Game.h"
-#include "Utils.h"
+#include "../include/Game.h"
+#include "../include/Utils.h"
 #include <iostream>
 #include <sys/ioctl.h>
 #ifdef _WIN32
