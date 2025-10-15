@@ -1,6 +1,6 @@
 # Star Defender 🚀
 
-A single-player 2D space shooter written in C++ with SDL2, featuring cloud-synced progress and leaderboards.
+A single-player 2D space shooter written in C++ with SDL3, featuring cloud-synced progress and leaderboards.
 
 ## Components
 
@@ -11,11 +11,11 @@ A single-player 2D space shooter written in C++ with SDL2, featuring cloud-synce
 ## Roadmap
 
 1. Terminal prototype (learn C++)
-2. SDL2 graphical version
+2. SDL3 graphical version
 3. Backend integration
 4. Mobile build (React Native wrapper)
 5. Optional LAN co-op
 
 ## Tech Stack
 
-C++, SDL2, FastAPI, SQLite, React Native, AWS, Docker, CMake
+C++, SDL3, FastAPI, SQLite, React Native, AWS, Docker, CMake

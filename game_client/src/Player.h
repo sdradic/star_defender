@@ -5,4 +5,4 @@ public:
     Player(int x, int y);
     void moveLeft();
     void moveRight(int maxWidth);
-}
+};
