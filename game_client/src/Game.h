@@ -11,6 +11,7 @@ private:
     int height;
     bool running;
     int tick;
+    int score;
 
     Player player;
     std::vector<Enemy> enemies;

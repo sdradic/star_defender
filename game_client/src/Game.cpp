@@ -52,7 +52,7 @@ char getch() {
 #endif
 
 Game::Game(int w, int h) 
-    : width(w), height(h), running(true), tick(0), player(w/2, h-1) {
+    : width(w), height(h), running(true), tick(0), score(0), player(w/2, h-1) {
         srand(static_cast<unsigned>(time(0)));   
 }
 
@@ -66,7 +66,7 @@ void Game::run() {
             render();
             sleep_ms(150);
         }
-        std::cout << "Game Over!" << std::endl;
+        std::cout << "Game Over! Final Score: " << score << std::endl;
         std::cout << "Would you like to play again? (y/n): ";
         char response;
         std::cin >> response;
@@ -93,6 +93,7 @@ void Game::reset() {
     player.y = height - 1;
     // Reset tick counter
     tick = 0;
+    score = 0;
     // Don't set running = false, just "restart" parameters
 }
 
@@ -112,6 +113,7 @@ void Game::update() {
             if (b.x == e.x && b.y == e.y) {
                 e.dead = true;
                 b.dead = true;
+                score += 10;
             }
         }
     }
@@ -127,7 +129,7 @@ void Game::update() {
     
     // Remove dead bullets
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
-                                [](Bullet &b){ 
+                                [this](Bullet &b){ 
                                     return b.dead; 
                                 }),
                 bullets.end());
@@ -135,6 +137,14 @@ void Game::update() {
 
 void Game::render() {
     system("clear");
+
+    // Title area
+    std::cout << "+" << std::string(width, '-') << "+\n";
+    std::cout << "|" << std::string(width/2 - 2, ' ') << "STAR" << std::string(width/2 - 2, ' ') << "|\n";
+    std::cout << "|" << std::string(width/2 - 4, ' ') << "DEFENDER" << std::string(width/2 - 4, ' ') << "|\n";
+    std::cout << "+" << std::string(width, '-') << "+\n";    
+    
+    // Game area
     std::vector<std::string> screen(height, std::string(width, ' '));
     if (player.y >= 0 && player.y < height && player.x >= 0 && player.x < width) {
         screen[player.y][player.x] = '^';
@@ -152,8 +162,18 @@ void Game::render() {
         }
     }
 
-    for (auto &row : screen) std::cout << row << '\n';
-    if (tick < 3) {
+    // Add borders
+    for (auto &row : screen) {
+        std::cout << "|" << row << "|\n";
+    }
+    std::cout << "+" << std::string(width, '-') << "+\n";
+    
+    // Score display
+    if (running) {
+        std::cout << "Score: " << score << std::endl;
+    }
+
+    if (tick < 10) {
         std::cout << "Press [A][D] to move, [Space] to shoot, [Q] to quit.\n";
     }
 }
