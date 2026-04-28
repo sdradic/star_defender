@@ -14,6 +14,7 @@ private:
     bool running;
     int tick;
     int score;
+    int lives;
     float difficulty;
     int enemiesSpawned;
     

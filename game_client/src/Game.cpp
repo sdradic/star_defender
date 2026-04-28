@@ -4,7 +4,7 @@
 #include <algorithm>
 
 Game::Game(SDL_Window* window, int w, int h) 
-    : window(window), width(w), height(h), running(true), tick(0), score(0), 
+    : window(window), width(w), height(h), running(true), tick(0), score(0), lives(3),
       player(w/2/TILE_SIZE, h/TILE_SIZE-1), currentState(MENU) {
     
     // Create renderer
@@ -17,9 +17,9 @@ Game::Game(SDL_Window* window, int w, int h)
     renderer->loadTextureFromFile("background", "../assets/background.png");
     
     // Load fonts
-    renderer->loadFont("pixel_large", "../assets/Pixel Game Extrude.otf", 48);
-    renderer->loadFont("pixel_medium", "../assets/Pixel Game.otf", 24);
-    renderer->loadFont("pixel_small", "../assets/Pixel Game.otf", 16);
+    renderer->loadFont("pixel_large", "../assets/ByteBounce.ttf", 48);
+    renderer->loadFont("pixel_medium", "../assets/ByteBounce.ttf", 24);
+    renderer->loadFont("pixel_small", "../assets/ByteBounce.ttf", 16);
     
     // Initialize random seed
     srand(static_cast<unsigned>(time(0)));
@@ -65,6 +65,8 @@ void Game::processInput() {
                         if (event.key.key == SDLK_SPACE || event.key.key == SDLK_RETURN) {
                             setGameState(PLAYING);
                             reset();
+                        } else if (event.key.key == SDLK_ESCAPE) {
+                            running = false;
                         }
                         break;
                         
@@ -102,6 +104,8 @@ void Game::processInput() {
                     case GAME_OVER:
                         if (event.key.key == SDLK_SPACE || event.key.key == SDLK_RETURN) {
                             setGameState(MENU);
+                        } else if (event.key.key == SDLK_ESCAPE) {
+                            running = false;
                         }
                         break;
                 }
@@ -123,6 +127,7 @@ void Game::reset() {
     // Reset game state
     tick = 0;
     score = 0;
+    lives = 3;
     difficulty = 1.0;
     enemiesSpawned = 0;
 }
@@ -137,7 +142,7 @@ void Game::update() {
     for (auto &b: bullets) b.y--;
 
     // Move enemies downward (slower - every 2 ticks instead of every tick)
-    if (tick % 2 == 0) {
+    if (tick % 4 == 0) {
         for (auto &e: enemies) e.y++;
     }
 
@@ -162,7 +167,10 @@ void Game::update() {
                                 [this](Enemy &e){ 
                                     if (e.dead) return true;
                                     if (e.y >= height / TILE_SIZE - 1) { 
-                                        setGameState(GAME_OVER);
+                                        lives--;
+                                        if (lives <= 0) {
+                                            setGameState(GAME_OVER);
+                                        }
                                         return true; 
                                     }
                                     return false;
@@ -209,40 +217,19 @@ void Game::render() {
 
 void Game::renderGameplay() {
     // Add downward-scrolling background
-    static float backgroundOffset = 0;
+    static float backgroundOffset=0;
     backgroundOffset += 0.5f; // Scroll speed in pixels per frame
     if (backgroundOffset >= height) backgroundOffset -= height;
     renderer->drawTexture("background", 0, backgroundOffset - height, width, height);
     renderer->drawTexture("background", 0, backgroundOffset, width, height);
     
-    // Draw title area with enhanced score display
-    renderer->setDrawColor(100, 100, 255); // Light blue for title
-    renderer->drawFillRect(0, 0, width, 60);
-    
-    // Draw score bar with gradient effect
-    int maxScoreBarWidth = width - 40;
-    int scoreBarWidth = std::min(score * 2, maxScoreBarWidth);
-    
-    // Background for score bar
-    renderer->setDrawColor(50, 50, 100);
-    renderer->drawFillRect(20, 20, maxScoreBarWidth, 20);
-    
-    // Score bar with color gradient based on score
-    if (scoreBarWidth > 0) {
-        Uint8 r = std::min(255, score / 2);
-        Uint8 g = std::max(0, 255 - score / 4);
-        Uint8 b = 255;
-        renderer->setDrawColor(r, g, b);
-        renderer->drawFillRect(20, 20, scoreBarWidth, 20);
-    }
-    
     // Draw score text
     std::string scoreText = "Score: " + std::to_string(score);
-    renderer->drawText("pixel_small", scoreText, 20, 45, 255, 255, 255);
+    renderer->drawText("pixel_small", scoreText, 10, height-20, 255, 255, 255);
     
-    // Draw game area border
-    renderer->setDrawColor(255, 255, 255); // White border
-    renderer->drawRect(0, 60, width, height - 60);
+    // Draw lives text
+    std::string livesText = "Lives: " + std::to_string(lives);
+    renderer->drawText("pixel_small", livesText, width-60, height-20, 255, 255, 255);
     
     // Draw player
     renderer->setDrawColor(0, 255, 0); // Green player
@@ -298,8 +285,9 @@ void Game::setGameState(GameState newState) {
 
 void Game::renderMenu() {
     // Draw title area
-    renderer->setDrawColor(100, 100, 255);
-    renderer->drawFillRect(0, 0, width, height);
+    // Draw the background filling the entire window
+    renderer->drawTexture("background", 0, 0, width, height);
+    
     
     // Draw title text - centered
     renderer->drawTextCentered("pixel_large", "STAR DEFENDER", height/2 - 80, 255, 255, 255);
@@ -318,6 +306,19 @@ void Game::renderPaused() {
     // Draw pause text - centered
     renderer->drawTextCentered("pixel_large", "PAUSED", height/2 - 30, 255, 255, 255);
     renderer->drawTextCentered("pixel_medium", "Press ESC to Resume", height/2 + 20, 200, 200, 200);
+
+    // Draw high score - centered
+    std::string highestScoreText = "Highest Score: " + std::to_string(score);
+    renderer->drawTextCentered("pixel_medium", highestScoreText, height/2 + 50, 180, 180, 180);
+
+    // Draw score text
+    std::string scoreText = "Score: " + std::to_string(score);
+    renderer->drawText("pixel_small", scoreText, 10, height-20, 255, 255, 255);
+
+    
+    // Draw lives text
+    std::string livesText = "Lives: " + std::to_string(lives);
+    renderer->drawText("pixel_small", livesText, width-60, height-20, 255, 255, 255);
 }
 
 void Game::renderGameOver() {
@@ -331,9 +332,13 @@ void Game::renderGameOver() {
     // Draw final score - centered
     std::string scoreText = "Final Score: " + std::to_string(score);
     renderer->drawTextCentered("pixel_medium", scoreText, height/2 + 10, 255, 255, 255);
+
+    // Draw high score - centered
+    std::string highestScoreText = "Highest Score: " + std::to_string(score);
+    renderer->drawTextCentered("pixel_medium", highestScoreText, height/2 + 30, 180, 180, 180);
     
     // Draw restart instruction - centered
-    renderer->drawTextCentered("pixel_medium", "Press SPACE to Return to Menu", height/2 + 50, 200, 200, 200);
+    renderer->drawTextCentered("pixel_medium", "Press SPACE to Return to Menu", height/2 + 60, 200, 200, 200);
 }
 
 // Particle system
